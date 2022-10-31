@@ -1,6 +1,7 @@
 package rubikscube
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -906,100 +907,111 @@ func TestRotateBottomRowRight(t *testing.T) {
 // 	}
 // }
 
-// func TestAllCombinationsPossible(t *testing.T) {
-// 	actions := []func(cube cube){
-// 		func(cube cube) { cube.RotateRowRight(0) },
-// 		func(cube cube) { cube.RotateRowLeft(0) },
-// 		func(cube cube) { cube.RotateRowRight(1) },
-// 		func(cube cube) { cube.RotateRowLeft(1) },
-// 		// func(cube cube) { cube.RotateColumnUp(0) },
-// 		// func(cube cube) { cube.RotateColumnDown(0) },
-// 		// func(cube cube) { cube.RotateColumnUp(1) },
-// 		// func(cube cube) { cube.RotateColumnDown(1) },
-// 	}
+func TestAllCombinationsPossible(t *testing.T) {
+	actions := []func(cube cube){
+		// func(cube cube) { cube.RotateRowRight(0) },
+		func(cube cube) { cube.RotateRowLeft(0) },
+		// func(cube cube) { cube.RotateRowRight(1) },
+		func(cube cube) { cube.RotateRowLeft(1) },
+		// func(cube cube) { cube.RotateColumnUp(0) },
+		// func(cube cube) { cube.RotateColumnDown(0) },
+		// func(cube cube) { cube.RotateColumnUp(1) },
+		// func(cube cube) { cube.RotateColumnDown(1) },
+	}
 
-// 	states, track, combinations := [][24]int{}, map[[24]int]struct{}{}, 3674160
+	states, track, combinations := [][24]int{}, map[[24]int]struct{}{}, 3674160
 
-// 	initialState := flatten(NewCube(2))
-// 	states, track[initialState] = append(states, initialState), struct{}{}
+	initialState := flatten(NewCube(2))
+	states, track[initialState] = append(states, initialState), struct{}{}
 
-// 	start, end := -1, 0
-// 	for start != end {
-// 		start = len(track)
-// 		for _, state := range states {
-// 			next := [][24]int{}
-// 			for _, action := range actions {
-// 				view := reshape(state)
-// 				action(view)
-// 				flat := flatten(view)
-// 				if _, ok := track[flat]; !ok {
-// 					next = append(next, flat)
-// 					track[flat] = struct{}{}
-// 				}
-// 			}
-// 			states = next
-// 		}
-// 		end = len(track)
-// 	}
-// 	fmt.Println(end)
-// 	fmt.Println(combinations)
-// }
+	start, end := -1, 0
+	for start != end {
+		start = len(track)
+		for _, state := range states {
+			next := [][24]int{}
+			for _, action := range actions {
+				view := reshape(state)
+				action(view)
 
-// func checkFaces(cube cube) [][24]int {
-// 	faces := [][24]int{}
-// 	faces = append(faces, checkRotations(cube)...)
-// 	return faces
-// }
+				checks, seen := checkRotations(view), false
+				for _, check := range checks {
+					if _, ok := track[check]; ok {
+						seen = true
+						break
+					}
+				}
 
-// func checkRotations(cube cube) [][24]int {
-// 	checks := [][24]int{}
+				if !seen {
+					flat := flatten(view)
+					next = append(next, flat)
+					track[flat] = struct{}{}
+				}
+			}
+			states = next
+		}
+		end = len(track)
+	}
+	fmt.Println(end)
+	fmt.Println(combinations)
+}
 
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnUp()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnUp()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnUp()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnUp()
+func checkFaces(cube cube) [][24]int {
+	faces := [][24]int{}
+	faces = append(faces, checkRotations(cube)...)
+	cube.TurnUp()
+	faces = append(faces, checkRotations(cube)...)
+	cube.TurnRight()
+	faces = append(faces, checkRotations(cube)...)
+	cube.TurnRight()
+	faces = append(faces, checkRotations(cube)...)
+	cube.TurnRight()
+	faces = append(faces, checkRotations(cube)...)
+	cube.TurnUp()
+	faces = append(faces, checkRotations(cube)...)
+	return faces
+}
 
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnRight()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnRight()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnRight()
-// 	checks = append(checks, flatten(cube))
-// 	cube.TurnRight()
-// 	return checks
-// }
+func checkRotations(cube cube) [][24]int {
+	checks := [][24]int{}
 
-// func flatten(cube cube) [24]int {
-// 	flat := [24]int{}
+	checks = append(checks, flatten(cube))
+	cube.RotateFaceRight(top)
+	checks = append(checks, flatten(cube))
+	cube.RotateFaceRight(top)
+	checks = append(checks, flatten(cube))
+	cube.RotateFaceRight(top)
+	checks = append(checks, flatten(cube))
+	cube.RotateFaceRight(top)
 
-// 	l := 0
-// 	for i := range cube {
-// 		for j := range cube[i] {
-// 			for k := range cube[i][j] {
-// 				flat[l] = cube[i][j][k]
-// 				l += 1
-// 			}
-// 		}
-// 	}
-// 	return flat
-// }
+	return checks
+}
 
-// func reshape(flat [24]int) cube {
-// 	cube := NewCube(2)
+func flatten(cube cube) [24]int {
+	flat := [24]int{}
 
-// 	l := 0
-// 	for i := range cube {
-// 		for j := range cube[i] {
-// 			for k := range cube[i][j] {
-// 				cube[i][j][k] = flat[l]
-// 				l += 1
-// 			}
-// 		}
-// 	}
-// 	return cube
-// }
+	l := 0
+	for i := range cube {
+		for j := range cube[i] {
+			for k := range cube[i][j] {
+				flat[l] = cube[i][j][k]
+				l += 1
+			}
+		}
+	}
+	return flat
+}
+
+func reshape(flat [24]int) cube {
+	cube := NewCube(2)
+
+	l := 0
+	for i := range cube {
+		for j := range cube[i] {
+			for k := range cube[i][j] {
+				cube[i][j][k] = flat[l]
+				l += 1
+			}
+		}
+	}
+	return cube
+}
